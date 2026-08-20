@@ -1,0 +1,61 @@
+plugins {
+    id 'fabric-loom' version '1.10-SNAPSHOT'
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    // NOTE (read me): maLiLib and Litematica are published on masa's own maven,
+    // not Maven Central or the Fabric maven. Double check this URL is still
+    // correct before building - if it 404s, look up the current address from
+    // the Litematica GitHub README and swap it in here.
+    maven {
+        name = "masa"
+        url = "https://masa.dy.fi/maven"
+    }
+    mavenCentral()
+}
+
+dependencies {
+    // Minecraft / mappings / loader — Loom resolves these automatically.
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    // Fabric API
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // maLiLib (required by Litematica, and used directly for GUI/config helpers)
+    modImplementation "fi.dy.masa.malilib:malilib-fabric-${project.minecraft_version}:${project.malilib_version}"
+
+    // Litematica — the schematic engine we hook into
+    modImplementation "fi.dy.masa.litematica:litematica-fabric-${project.minecraft_version}:${project.litematica_version}"
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 25
+}
+
+java {
+    withSourcesJar()
+}
+
+jar {
+    from("LICENSE") {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
